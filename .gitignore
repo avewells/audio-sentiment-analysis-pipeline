@@ -1,6 +1,7 @@
 # For this project
 data/
 outputs/
+audio_sentiment_analysis/pyAudioAnalysis
 
 # For Mac
 .DS_Store
