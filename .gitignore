@@ -5,6 +5,7 @@ audio_sentiment_analysis/pyAudioAnalysis
 
 # For Mac
 .DS_Store
+*.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
