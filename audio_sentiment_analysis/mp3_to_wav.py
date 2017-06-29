@@ -29,22 +29,31 @@ def convert_to_wav(inpath, inname, outdir):
         else:
             sys.exit('Make sure the output dirctory exists.')
 
-# check inputs
-if len(sys.argv) < 2:
-    sys.exit('Must at least supply the input directory.\nUsage: python mp3_to_wav.py INPUT_DIR OUT_DIR')
-elif len(sys.argv) < 3:
-    INPUT_DIR = sys.argv[1]
-    OUT_DIR = None
-else:
-    INPUT_DIR = sys.argv[1]
-    OUT_DIR = sys.argv[2]
 
-# check if it's a file or a directory to convert
-if os.path.isdir(INPUT_DIR):
-    print('Working...')
-    for filename in os.listdir(INPUT_DIR):
-        if filename.endswith('.mp3'):
-            convert_to_wav(os.path.join(INPUT_DIR, filename), filename, OUT_DIR)
-    print('Done.')
-else:
-    sys.exit('Make sure input directory exists.')
+def main():
+    '''
+    Checks that proper arguments were given and runs conversion
+    '''
+    # check inputs
+    if len(sys.argv) < 2:
+        sys.exit('Must at least supply the input directory.\nUsage: python mp3_to_wav.py INPUT_DIR OUT_DIR')
+    elif len(sys.argv) < 3:
+        INPUT_DIR = sys.argv[1]
+        OUT_DIR = None
+    else:
+        INPUT_DIR = sys.argv[1]
+        OUT_DIR = sys.argv[2]
+
+    # check if it's a file or a directory to convert
+    if os.path.isdir(INPUT_DIR):
+        print('Working...')
+        for filename in os.listdir(INPUT_DIR):
+            if filename.endswith('.mp3'):
+                convert_to_wav(os.path.join(INPUT_DIR, filename), filename, OUT_DIR)
+        print('Done.')
+    else:
+        sys.exit('Make sure input directory exists.')
+
+
+if __name__ == '__main__':
+    main()
