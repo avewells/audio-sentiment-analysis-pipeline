@@ -74,7 +74,7 @@ def split_call_into_speakers(call_file, out_loc):
             out_seg.export(os.path.join(curr_call_out_base, str(seg) + '_sales.wav'), format='wav')
 
 
-def extract_audio_features(in_csv, out_loc, split_flag):
+def extract_audio_features(in_csv, csv_loc, out_loc, split_flag):
     '''
     Uses openSMILE to extract multiple low level audio features. Features are extracted
     in batch. These features are the same features used in INTERSPEECH 2009 Emotion
@@ -86,8 +86,8 @@ def extract_audio_features(in_csv, out_loc, split_flag):
     negcsv = os.path.join(out_loc, 'negfeatures.csv')
     poscsv = os.path.join(out_loc, 'posfeatures.csv')
     
-    # if wavs were split by above func then have to do slightly different process
-    if not split_flag: # CHANGE!!!!
+    # if wavs were split by above function then have to do slightly different process
+    if split_flag:
         split_out_dir = 'calls_split_by_speaker'
         for idx, row in in_csv.iterrows():
             if row[0].lower().endswith('.wav'):
@@ -107,9 +107,22 @@ def extract_audio_features(in_csv, out_loc, split_flag):
                                              stdout=subprocess.PIPE)
                 opensmile.communicate()
     else:
-        # TODO
-        print('not split')
-    
+        # extract features from files in same directory as input CSV
+        for idx, row in in_csv.iterrows():
+            if row[0].lower().endswith('.wav'):
+                input_call = row[0]
+            else:
+                input_call = row[0] + '.wav'
+            call_path = os.path.join(os.path.dirname(csv_loc), input_call)
+            if row[-1] == 0:
+                csvout = negcsv
+            else:
+                csvout = poscsv
+            opensmile = subprocess.Popen(['SMILExtract', '-C', config, '-instname', input_call, '-I',
+                                          call_path, '-csvoutput', csvout, '-timestampcsv', '0'],
+                                         stdout=subprocess.PIPE)
+            opensmile.communicate()
+
     # add labels to csv (openSMILE uses semi colon instead of comma for some reason)
     neg_features = pd.read_csv(negcsv, sep=';')
     pos_features = pd.read_csv(poscsv, sep=';')
@@ -139,7 +152,7 @@ def process_csv_input(csv_loc, out_loc, split_flag, extract_flag):
                 split_call_into_speakers(call_path, out_loc)
             else:
                 split_call_into_speakers(call_path + '.wav', out_loc)
-        extract_audio_features(in_csv, out_loc, split_flag)
+        extract_audio_features(in_csv, csv_loc, out_loc, split_flag)
     elif split_flag:
         print('Splitting provided audio files into chunks.')
         for idx, row in in_csv.iterrows():
@@ -148,10 +161,10 @@ def process_csv_input(csv_loc, out_loc, split_flag, extract_flag):
                 split_call_into_speakers(call_path, out_loc)
             else:
                 split_call_into_speakers(call_path + '.wav', out_loc)
-        extract_audio_features(in_csv, out_loc, split_flag)
+        extract_audio_features(in_csv, csv_loc, out_loc, split_flag)
     elif extract_flag:
         print('Extracting features from provided audio files.')
-        extract_audio_features(in_csv, out_loc, split_flag)
+        extract_audio_features(in_csv, csv_loc, out_loc, split_flag)
 
 
 def main():
@@ -183,27 +196,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-'''
-# load input file
-input_path = '/Users/ave/Documents/research_shang/audio_sentiment_analysis/data/penske/wav/00T6000005JZ3dQ.wav'
-raw_file = AudioSegment.from_file(input_path, 'wav')
-
-# diarize
-diarized = aS.speakerDiarization(input_path, 2, mtSize=0.5, mtStep=0.1, PLOT=True)
-
-# determine which label was given to customer and salesperson
-cust = diarized[0]
-sales = 1 - cust
-
-# output the segments
-segs, flags = aS.flags2segs(diarized, 0.1)
-for s in range(segs.shape[0]):
-    if segs[s, 1] - segs[s, 0] < 1:
-        continue
-    out_seg = raw_file[segs[s, 0]*1000:segs[s, 1]*1000]
-    if flags[s] == cust:
-        out_seg.export(str(s) + '_cust.wav', format='wav')
-    else:
-        out_seg.export(str(s) + '_sales.wav', format='wav')
-'''
