@@ -40,12 +40,14 @@ def split_call_into_speakers(call_file, out_loc):
         os.makedirs(diarized_out_dir)
 
     # load in raw audio file
+    print(call_file)
     raw_audio = AudioSegment.from_file(call_file, 'wav')
     file_name = os.path.splitext(os.path.basename(call_file))[0]
 
     # uses pre-trained HMM to determine where the ringtones are and only use audio from after
     # last detected ring and exports intermediate file
-    ring_labels = aS.hmmSegmentation(call_file, 'hmmRingDetect', False)
+    curr_path = os.path.dirname(os.path.realpath(__file__))
+    ring_labels = aS.hmmSegmentation(call_file, os.path.join(curr_path, 'hmmRingDetect'), False)
     segs, flags = aS.flags2segs(ring_labels[0], 1.0) # 1.0 is the mid-term window step from above model
     no_rings_audio = raw_audio[segs[-1, 0]*1000:segs[-1, 1]*1000]
     temp_out_loc = os.path.join(no_rings_out_dir, file_name) + '.wav'
@@ -82,7 +84,8 @@ def extract_audio_features(in_csv, csv_loc, out_loc, split_flag):
     as last column.
     '''
     # openSMILE settings for use later
-    config = 'opensmile_conf/IS09_emotion.conf'
+    curr_path = os.path.dirname(os.path.realpath(__file__))
+    config = os.path.join(curr_path, 'opensmile_conf/IS09_emotion.conf')
     negcsv = os.path.join(out_loc, 'negfeatures.csv')
     poscsv = os.path.join(out_loc, 'posfeatures.csv')
     
@@ -167,20 +170,21 @@ def process_csv_input(csv_loc, out_loc, split_flag, extract_flag):
         extract_audio_features(in_csv, csv_loc, out_loc, split_flag)
 
 
-def main():
+def main(args, pipe=False):
     '''
     Checks passed arguments and performs requested actions.
     '''
-    parser = argparse.ArgumentParser(description='Process raw audio files for sentiment analysis.')
-    parser.add_argument('-i', '--input', dest='csv_loc', required=True,
-                        help='Path to CSV file where first column is path to audio file and last column is label.')
-    parser.add_argument('-o', '--out', dest='out_loc', required=True,
-                        help='Path to where the audio chunks and feature file should be saved.')
-    parser.add_argument('-s', '--split', dest='split_flag', action='store_true', default=False,
-                        help='If each input file should be split into chunks by speaker.')
-    parser.add_argument('-e', '--extract', dest='extract_flag', action='store_true', default=False,
-                        help='If feature extraction should be performed on the input samples')
-    args = parser.parse_args()
+    if not pipe:
+        parser = argparse.ArgumentParser(description='Process raw audio files for sentiment analysis.')
+        parser.add_argument('-i', '--input', dest='csv_loc', required=True,
+                            help='Path to CSV file where first column is path to audio file and last column is label.')
+        parser.add_argument('-o', '--out', dest='out_loc', required=True,
+                            help='Path to where the audio chunks and feature file should be saved.')
+        parser.add_argument('-s', '--split', dest='split_flag', action='store_true', default=False,
+                            help='If each input file should be split into chunks by speaker.')
+        parser.add_argument('-e', '--extract', dest='extract_flag', action='store_true', default=False,
+                            help='If feature extraction should be performed on the input samples')
+        args = parser.parse_args()
 
     # make sure they supplied either -s or -e
     if args.split_flag or args.extract_flag:
@@ -195,4 +199,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
