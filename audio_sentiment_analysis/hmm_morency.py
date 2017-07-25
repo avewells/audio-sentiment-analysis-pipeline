@@ -12,12 +12,12 @@ class HmmMorency:
     '''
     HMM for two-class sentiment classification. A separate HMM is trained for each class.
     '''
-    def __init__(self, n_components=4, n_mix=4):
+    def __init__(self, n_components=4, n_mix=4, random_state=10):
         def build_hmm(n_components, n_mix):
             '''
             Create models with passed parameters.
             '''
-            model = hmm.GMMHMM(n_components=n_components, n_mix=n_mix)
+            model = hmm.GMMHMM(n_components=n_components, n_mix=n_mix, random_state=random_state)
             return model
         self.hmm_0 = build_hmm(n_components, n_mix)
         self.hmm_1 = build_hmm(n_components, n_mix)

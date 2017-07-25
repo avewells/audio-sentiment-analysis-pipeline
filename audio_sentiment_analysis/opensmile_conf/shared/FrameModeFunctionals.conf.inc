@@ -5,8 +5,8 @@
 ;writer.levelconf.isRb = 1
 ;writer.levelconf.nT = 5
 
-frameMode = full
-frameSize = 0
-frameStep = 0
+frameMode = fixed
+frameSize = 5
+frameStep = 5
 frameCenterSpecial = left
 

@@ -32,9 +32,17 @@ def train_and_test(model, data_train, data_test, labels_train, labels_test):
     '''
     model.fit(data_train, labels_train)
     pred_labels = model.predict(data_test)
-    score = accuracy_score(labels_test, pred_labels)
+    chunk_scores = accuracy_score(labels_test, pred_labels)
 
-    return score
+    # assigns a single label to a whole call based on whether its chunks were
+    # majority positive or negative
+    call_label = np.round(np.mean(pred_labels))
+    if call_label == labels_test[0]:
+        call_score = 1.0
+    else:
+        call_score = 0.0
+
+    return chunk_scores, call_score
 
 
 def sep_data_labels(feat_loc):
@@ -52,22 +60,24 @@ def sep_data_labels(feat_loc):
     return data, labels, ids
 
 
-def score_stats(model, scores, out_file):
+def score_stats(model, chunk_scores, overall_scores, out_file):
     '''
     Calculates basic statistics on a model's scores: max, min, avg, std dev.
     Writes stats to an output file.
     '''
-    max_score = np.amax(scores)
-    min_score = np.amin(scores)
-    avg_score = np.mean(scores)
-    std_score = np.std(scores)
+    max_score = np.amax(chunk_scores)
+    min_score = np.amin(chunk_scores)
+    avg_score = np.mean(chunk_scores)
+    std_score = np.std(chunk_scores)
+    overall = np.mean(overall_scores)
 
     with open(out_file, 'a') as results:
         results.write(model + ': \n')
         results.write('Max: ' + str(max_score) + '\n')
         results.write('Min: ' + str(min_score) + '\n')
-        results.write('Avg: ' + str(avg_score) + '\n')
-        results.write('Std: ' + str(std_score) + '\n\n')
+        results.write('Std: ' + str(std_score) + '\n')
+        results.write('Chunk Avg: ' + str(avg_score) + '\n')
+        results.write('Call Avg: ' + str(overall) + '\n\n')
 
 
 def main(args, pipe=False):
@@ -84,12 +94,20 @@ def main(args, pipe=False):
                             help='Classify with a Hidden Markov Model.')
         parser.add_argument('--rf', dest='rf_flag', action='store_true',
                             help='Classify with a random forest.')
+        parser.add_argument('--n_components', dest='n_components',
+                            help='Number of components for the HMM.')
+        parser.add_argument('--n_mix', dest='n_mix',
+                            help='Number of Gaussian mixtures for the HMM.')
+        parser.add_argument('--n_estimators', dest='n_estimators',
+                            help='Number of tree estimators for the random forest.')
         args = parser.parse_args()
 
     if args.hmm_flag or args.rf_flag:
         # store scores from all runs to calc stats
-        hmm_scores = []
-        rf_scores = []
+        hmm_chunk_scores = []
+        hmm_overall_scores = []
+        rf_chunk_scores = []
+        rf_overall_scores = []
         # split data for leave-one-group(call)-out validation
         data, labels, ids = sep_data_labels(args.feat_loc)
         logo = LeaveOneGroupOut()
@@ -102,19 +120,36 @@ def main(args, pipe=False):
 
             # classify with the selected models
             if args.hmm_flag:
-                hmm_model = HmmMorency(n_components=4, n_mix=4)
-                hmm_scores.append(train_and_test(hmm_model, data_train, data_test, labels_train, labels_test))
+                if args.n_components:
+                    n_components = args.n_components
+                else:
+                    n_components = 2
+                if args.n_mix:
+                    n_mix = args.n_mix
+                else:
+                    n_mix = 2
+                hmm_model = HmmMorency(n_components=n_components, n_mix=n_mix)
+                chunk_scores, call_score = train_and_test(hmm_model, data_train, data_test, labels_train, labels_test)
+                hmm_chunk_scores.append(chunk_scores)
+                hmm_overall_scores.append(call_score)
             if args.rf_flag:
-                rf_model = RandomForestClassifier(n_estimators=50, n_jobs=-1)
-                rf_scores.append(train_and_test(rf_model, data_train, data_test, labels_train, labels_test))
+                if args.n_estimators:
+                    n_estimators = args.n_estimators
+                else:
+                    n_estimators = 100
+                rf_model = RandomForestClassifier(n_estimators=n_estimators, n_jobs=-1, random_state=10)
+                chunk_scores, call_score = train_and_test(rf_model, data_train, data_test, labels_train, labels_test)
+                rf_chunk_scores.append(chunk_scores)
+                rf_overall_scores.append(call_score)
+
             curr_split += 1
 
         # evaluate the scores for all models
         out_file = os.path.join(args.out_loc, 'results.txt')
         if args.hmm_flag:
-            score_stats('hmm', hmm_scores, out_file)
+            score_stats('hmm', hmm_chunk_scores, hmm_overall_scores, out_file)
         if args.rf_flag:
-            score_stats('random forest', rf_scores, out_file)
+            score_stats('random forest', rf_chunk_scores, rf_overall_scores, out_file)
     else:
         sys.exit('Must choose at least one classification method. (--hmm, --rf)')
 

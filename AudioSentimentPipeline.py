@@ -43,6 +43,12 @@ def main():
                         help='Classify with a Hidden Markov Model.')
     parser.add_argument('--rf', dest='rf_flag', action='store_true',
                         help='Classify with a random forest.')
+    parser.add_argument('--n_components', dest='n_components',
+                        help='Number of components for the HMM.')
+    parser.add_argument('--n_mix', dest='n_mix',
+                        help='Number of Gaussian mixtures for the HMM.')
+    parser.add_argument('--n_estimators', dest='n_estimators',
+                        help='Number of tree estimators for the random forest.')
     args = parser.parse_args()
 
     if args.hmm_flag or args.rf_flag:
