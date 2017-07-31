@@ -90,18 +90,19 @@ def build_network(input_var=None, mask_var=None, num_features=0, num_units=10):
     return layer_out
 
 
-def main():
+def main(args, pipe=False):
     '''
     Checks passed arguments and performs requested actions.
     '''
-    parser = argparse.ArgumentParser(description='Classify calls as positive or negative.')
-    parser.add_argument('-f', '--features', dest='feat_loc', required=True,
-                        help='Path to CSV feature file.')
-    parser.add_argument('-o', '--out', dest='out_loc', required=True,
-                        help='Path to where classification summary should be saved.')
-    parser.add_argument('--epochs', dest='num_epochs', help='Number of training epochs.')
-    parser.add_argument('--n_units', dest='num_units', help='Number of LSTM units.')
-    args = parser.parse_args()
+    if not pipe:
+        parser = argparse.ArgumentParser(description='Classify calls as positive or negative.')
+        parser.add_argument('-f', '--features', dest='feat_loc', required=True,
+                            help='Path to CSV feature file.')
+        parser.add_argument('-o', '--out', dest='out_loc', required=True,
+                            help='Path to where classification summary should be saved.')
+        parser.add_argument('--epochs', dest='num_epochs', help='Number of training epochs.')
+        parser.add_argument('--n_units', dest='num_units', help='Number of LSTM units.')
+        args = parser.parse_args()
 
     # grab arguments if given, otherwise give some defaults
     if args.num_epochs:
@@ -236,4 +237,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

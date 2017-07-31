@@ -23,6 +23,7 @@ import argparse
 import os
 from audio_sentiment_analysis import process_raw_data
 from audio_sentiment_analysis import classify
+from audio_sentiment_analysis import lstm
 
 
 def main():
@@ -43,22 +44,29 @@ def main():
                         help='Classify with a Hidden Markov Model.')
     parser.add_argument('--rf', dest='rf_flag', action='store_true',
                         help='Classify with a random forest.')
+    parser.add_argument('--lstm', dest='lstm_flag', action='store_true',
+                        help='Classify with a LSTM.')
     parser.add_argument('--n_components', dest='n_components',
                         help='Number of components for the HMM.')
     parser.add_argument('--n_mix', dest='n_mix',
                         help='Number of Gaussian mixtures for the HMM.')
-    parser.add_argument('--n_estimators', dest='n_estimators',
-                        help='Number of tree estimators for the random forest.')
+    parser.add_argument('--epochs', dest='num_epochs',
+                        help='Number of training epochs.')
+    parser.add_argument('--n_units', dest='num_units',
+                        help='Number of LSTM units.')
     args = parser.parse_args()
 
-    if args.hmm_flag or args.rf_flag:
+    if args.hmm_flag or args.rf_flag or args.lstm_flag:
         args.split_flag = True
         args.extract_flag = True
         args.feat_loc = os.path.join(args.out_loc, 'features.csv')
         process_raw_data.main(args, pipe=True)
-        classify.main(args, pipe=True)
+        if not args.lstm_flag:
+            classify.main(args, pipe=True)
+        else:
+            lstm.main(args, pipe=True)
     else:
-        sys.exit('Must choose at least one classification method. (--hmm, --rf)')
+        sys.exit('Must choose at least one classification method. (--hmm, --rf, --lstm)')
 
 
 if __name__ == '__main__':
