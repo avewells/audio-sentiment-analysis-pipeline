@@ -17,6 +17,7 @@ import argparse
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import LeaveOneGroupOut
+from sklearn.utils import shuffle
 from sklearn.metrics import accuracy_score
 from sklearn import svm
 from hmm_morency import HmmMorency
@@ -36,11 +37,14 @@ def train_and_test(model, data_train, data_test, labels_train, labels_test):
 
     # assigns a single label to a whole call based on whether its chunks were
     # majority positive or negative
-    call_label = np.round(np.mean(pred_labels))
-    if call_label == labels_test[0]:
+    pred_call_label = np.round(np.mean(pred_labels))
+    if pred_call_label == labels_test[0]:
         call_score = 1.0
     else:
         call_score = 0.0
+
+    pred.append(pred_call_label)
+    true.append(labels_test[0])
 
     return chunk_scores, call_score
 
@@ -57,7 +61,7 @@ def sep_data_labels(feat_loc):
     labels = feature_file.ix[:, -1].values
     data = feature_file.ix[:, 1:-1].values
 
-    return data, labels, ids
+    return shuffle(data, labels, ids, random_state=10)
 
 
 def score_stats(model, chunk_scores, overall_scores, out_file):
@@ -108,33 +112,36 @@ def main(args, pipe=False):
         hmm_overall_scores = []
         rf_chunk_scores = []
         rf_overall_scores = []
+
         # split data for leave-one-group(call)-out validation
         data, labels, ids = sep_data_labels(args.feat_loc)
         logo = LeaveOneGroupOut()
         curr_split = 1
         num_splits = logo.get_n_splits(data, labels, ids)
+        
+        # loop through all cross validation folds
         for train_index, test_index in logo.split(data, labels, ids):
             print('Split ' + str(curr_split) + ' out of ' + str(num_splits))
             data_train, data_test = data[train_index], data[test_index]
             labels_train, labels_test = labels[train_index], labels[test_index]
-
             # classify with the selected models
             if args.hmm_flag:
                 if args.n_components:
-                    n_components = args.n_components
+                    n_components = int(args.n_components)
                 else:
                     n_components = 2
                 if args.n_mix:
-                    n_mix = args.n_mix
+                    n_mix = int(args.n_mix)
                 else:
                     n_mix = 2
                 hmm_model = HmmMorency(n_components=n_components, n_mix=n_mix)
                 chunk_scores, call_score = train_and_test(hmm_model, data_train, data_test, labels_train, labels_test)
                 hmm_chunk_scores.append(chunk_scores)
                 hmm_overall_scores.append(call_score)
+
             if args.rf_flag:
                 if args.n_estimators:
-                    n_estimators = args.n_estimators
+                    n_estimators = int(args.n_estimators)
                 else:
                     n_estimators = 100
                 rf_model = RandomForestClassifier(n_estimators=n_estimators, n_jobs=-1, random_state=10)
@@ -147,9 +154,12 @@ def main(args, pipe=False):
         # evaluate the scores for all models
         out_file = os.path.join(args.out_loc, 'results.txt')
         if args.hmm_flag:
-            score_stats('hmm', hmm_chunk_scores, hmm_overall_scores, out_file)
+            score_stats('hmm, mix: ' + str(n_mix) + ' states: ' + str(n_components),
+                        hmm_chunk_scores, hmm_overall_scores, out_file)
         if args.rf_flag:
-            score_stats('random forest', rf_chunk_scores, rf_overall_scores, out_file)
+            score_stats('random forest, estimators: ' + str(n_estimators),
+                        rf_chunk_scores, rf_overall_scores, out_file)
+
     else:
         sys.exit('Must choose at least one classification method. (--hmm, --rf)')
 

@@ -44,7 +44,7 @@ def split_call_into_speakers(call_file, out_loc):
     raw_audio = AudioSegment.from_file(call_file, 'wav')
     file_name = os.path.splitext(os.path.basename(call_file))[0]
 
-    # uses pre-trained HMM to determine where the ringtones are and only use audio from after
+    # uses trained HMM to determine where the ringtones are and only use audio from after
     # last detected ring and exports intermediate file
     curr_path = os.path.dirname(os.path.realpath(__file__))
     ring_labels = aS.hmmSegmentation(call_file, os.path.join(curr_path, 'hmmRingDetect'), False)
@@ -134,7 +134,7 @@ def extract_audio_features(in_csv, csv_loc, out_loc, split_flag):
 
     # export combined features
     combined_features = neg_features.append(pos_features)
-    combined_features.to_csv(os.path.join(out_loc, 'features.csv'), index=False)
+    combined_features.to_csv(os.path.join(out_loc, 'features.csv'), index=False, header=None)
 
 
 
