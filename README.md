@@ -22,4 +22,5 @@ Once the above libraries are installed just clone this repo to get ASAP.
 - Refer to openSMILE documentation for how to change the feature extraction. Config files are in the [opensmile_conf](https://github.com/avewells/audio_sentiment_analysis/tree/master/audio_sentiment_analysis/opensmile_conf) folder. Default extraction uses IS09 features. To change from full file features to sliding window features edit [FrameModeFunctionals.conf.inc](https://github.com/avewells/audio_sentiment_analysis/blob/master/audio_sentiment_analysis/opensmile_conf/shared/FrameModeFunctionals.conf.inc).
 
 ### Example
+This example uses files that are not from call centers so do not contain two speakers and use fake labels just to show everything working.
 `python AudioSentimentPipeline.py -i data/input.csv -o outputs/ --hmm`
