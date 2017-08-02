@@ -1,5 +1,5 @@
-## Audio Sentiment Analysis
-An end-to-end Python pipeline for performing sentiment analysis on audio files.
+## Audio Sentiment Analysis Pipeline (ASAP)
+An end-to-end Python pipeline for performing sentiment analysis on audio files of call-center conversations.
 
 ## Installation
 Directions for installing and running the pipeline.
@@ -19,7 +19,8 @@ Once the above libraries are installed just clone this repo to get ASAP.
 - To run the whole pipeline end-to-end run `AudioSentimentPipeline.py`. Running `AudioSentimentPipeline.py -h` will give a description of the input requirements and options.
 - The input to ASAP is a CSV where the first column is the name of the audio file and the last column is the label. Each row corresponds to a different input file. Currently the input CSV must be in the same directory as all of the input audio files.
 - Each step of the pipeline can be run separately. Run `process_raw_data.py -h`, `classify.py -h`, and `lstm.py -h` for how to use each individually.
-- Refer to openSMILE documentation for how to change the feature extraction. Config files are in the [opensmile_conf](https://github.com/avewells/audio_sentiment_analysis/tree/master/audio_sentiment_analysis/opensmile_conf) folder. Default extraction uses IS09 features.
+- Refer to openSMILE documentation for how to change the feature extraction. Config files are in the [opensmile_conf](https://github.com/avewells/audio_sentiment_analysis/tree/master/audio_sentiment_analysis/opensmile_conf) folder. Default extraction uses IS09 features. To change from full file features to sliding window features edit [FrameModeFunctionals.conf.inc](https://github.com/avewells/audio_sentiment_analysis/blob/master/audio_sentiment_analysis/opensmile_conf/shared/FrameModeFunctionals.conf.inc).
 
 ### Example
-`python AudioSentimentPipeline.py -i ../`
+This example uses files that are not from call centers so do not contain two speakers and use fake labels just to show everything working.
+`python AudioSentimentPipeline.py -i data/input.csv -o outputs/ --hmm`
