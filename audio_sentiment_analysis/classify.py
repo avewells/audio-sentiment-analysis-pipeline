@@ -43,9 +43,6 @@ def train_and_test(model, data_train, data_test, labels_train, labels_test):
     else:
         call_score = 0.0
 
-    pred.append(pred_call_label)
-    true.append(labels_test[0])
-
     return chunk_scores, call_score
 
 
