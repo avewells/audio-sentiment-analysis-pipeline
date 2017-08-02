@@ -196,8 +196,6 @@ def main(args, pipe=False):
                     epoch + 1,time.time() - start_time,
                     float(train_err),float(val_err),val_acc * 100))
 
-                if split_count == 1:
-                    losses.append(float(train_err))
             
             # Compute the test error
             test_err, test_acc = val_fn(test_data, test_targets, test_masks)
