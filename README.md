@@ -1,5 +1,5 @@
 ## Audio Sentiment Analysis
-An end-to-end Python pipeline for performing sentiment analysis on audio files.
+An end-to-end Python pipeline for performing sentiment analysis on audio files of call-center conversations.
 
 ## Installation
 Directions for installing and running the pipeline.
@@ -11,7 +11,7 @@ Directions for installing and running the pipeline.
 - [pydub](https://github.com/jiaaro/pydub)
 - [hmmlearn](https://github.com/hmmlearn/hmmlearn)
 
-### ASAP
+### (A)udio (S)entiment (A)nalysis (P)ipeline (ASAP)
 Once the above libraries are installed just clone this repo to get ASAP.
 
 ## Using ASAP
